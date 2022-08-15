@@ -102,6 +102,10 @@ class Rocket:
     def __init__(self) -> None:
         self.velocity = self.coordinates = (0, 0)
         self._size = (Rocket.WIDTH, Rocket.HEIGHT)
+        self.boosting = True
+        self.thrust_up = self.thrust_right = self.thrust_left = 0.0
+        self.acceleration = 0.2 #Acceleration due to gravity
+        self.terrain_location = None
 
     @property
     def size(self):
@@ -109,16 +113,35 @@ class Rocket:
 
     def initialize(self, generate_new_scenario, terrain=None):
         if generate_new_scenario:
+            self.boosting = True
             if terrain:
                 self.coordinates = ((terrain.ground_width - self.size[0]) // 2, 
                     SCREEN_HEIGHT - terrain.ground_height - self.size[1])
                 self.velocity = (0, 0)
+                self.terrain_location = terrain.ground_width
 
     def draw(self):
         pythonGraph.draw_image("rocket.png", self.coordinates[0], self.coordinates[1], self.size[0], self.size[1])
 
     def update(self):
-        pass
+        velocity_x, velocity_y = self.velocity
+        coordinates_x, coordinates_y = self.coordinates
+        if self.boosting:
+            self.thrust_up = self.thrust_right = self.thrust_left = 0.0
+            if self.coordinates[1] + self.size[1] > SCREEN_HEIGHT // 2:
+                self.thrust_up = 0.35
+            else:
+                self.thrust_right = 0.25
+            if self.terrain_location:
+                if self.coordinates[0] > self.terrain_location:
+                    self.boosting = False
+        velocity_y = velocity_y - self.thrust_up + self.acceleration
+        velocity_x += self.thrust_right
+        velocity_x += self.thrust_left
+        coordinates_x += velocity_x
+        coordinates_y += velocity_y
+        self.velocity = (velocity_x, velocity_y)
+        self.coordinates = (coordinates_x, coordinates_y)
 
 
 class RocketLandingSimulator:
