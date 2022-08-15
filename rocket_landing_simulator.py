@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
     Created By: Marcelo F. Gonzales
-    
+
 """
 import math 
 import random 
@@ -60,6 +60,7 @@ class Boat:
         self._coordinates = (0, 0)
         self._size = (Boat.WIDTH, Boat.HEIGHT)
         self.velocity = 0
+        self.terrain_location = None
 
     @property
     def size(self):
@@ -80,10 +81,19 @@ class Boat:
                     terrain.ground_width + (SCREEN_WIDTH - terrain.ground_width + 1)), 
                     SCREEN_HEIGHT - terrain.water_height - self.size[1] + 1)
                 self.velocity = random.randint(Boat.MINIMUM_VELOCITY, Boat.MAXIMUM_VELOCITY)
+                self.terrain_location = terrain.ground_width
         
 
     def draw(self):
         pythonGraph.draw_image("boat.png", self.coordinates[0], self.coordinates[1], self.size[0], self.size[1])
+
+    def update(self):
+        self.coordinates = (self.coordinates[0] + self.velocity, self.coordinates[1])
+        if self.coordinates[0] + self.size[0] >= SCREEN_WIDTH:
+            self.velocity *= -1
+        if self.terrain_location:
+            if self.coordinates[0] <= self.terrain_location:
+                self.velocity *= -1
 
 
 class Rocket:
@@ -100,12 +110,15 @@ class Rocket:
     def initialize(self, generate_new_scenario, terrain=None):
         if generate_new_scenario:
             if terrain:
-                self.coordinates = ((terrain.ground_width - self.size[0])// 2, 
+                self.coordinates = ((terrain.ground_width - self.size[0]) // 2, 
                     SCREEN_HEIGHT - terrain.ground_height - self.size[1])
                 self.velocity = (0, 0)
 
     def draw(self):
         pythonGraph.draw_image("rocket.png", self.coordinates[0], self.coordinates[1], self.size[0], self.size[1])
+
+    def update(self):
+        pass
 
 
 class RocketLandingSimulator:
@@ -130,7 +143,8 @@ class RocketLandingSimulator:
         self.rocket.draw()
 
     def update_objects(self):
-        pass
+        self.boat.update()
+        self.rocket.update()
 
     def get_input(self):
         pass
@@ -157,8 +171,11 @@ class RocketLandingSimulator:
 
 
 def main():
-    rocket_simulator = RocketLandingSimulator()
-    rocket_simulator.loop()
+    try:
+        rocket_simulator = RocketLandingSimulator()
+        rocket_simulator.loop()
+    except KeyboardInterrupt:
+        print("CTRL-C: Exit Program")
 
 
 if __name__ == "__main__":
