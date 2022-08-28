@@ -99,6 +99,8 @@ class Boat:
 class Rocket:
     HEIGHT = 50
     WIDTH = 50
+    THRUSTER_HEIGHT = 50
+    THRUSTER_WIDTH = 50
     def __init__(self) -> None:
         self.velocity = self.coordinates = (0, 0)
         self._size = (Rocket.WIDTH, Rocket.HEIGHT)
@@ -122,6 +124,15 @@ class Rocket:
 
     def draw(self):
         pythonGraph.draw_image("rocket.png", self.coordinates[0], self.coordinates[1], self.size[0], self.size[1])
+        if self.thrust_up:
+            pythonGraph.draw_image("thruster.png", self.coordinates[0], self.coordinates[1] + (self.size[1] // 2 + 13)
+                                    , Rocket.THRUSTER_WIDTH, Rocket.THRUSTER_HEIGHT)
+        if self.thrust_left:
+            pythonGraph.draw_image("thruster.png", self.coordinates[0] + (self.size[0] // 3 - 5), self.coordinates[1]
+                                    + (self.size[1] // 2 + 13), Rocket.THRUSTER_WIDTH, Rocket.THRUSTER_HEIGHT)
+        if self.thrust_right:
+            pythonGraph.draw_image("thruster.png", self.coordinates[0] - (self.size[0] // 3 - 5), self.coordinates[1] 
+                                    + (self.size[1] // 2 + 13), Rocket.THRUSTER_WIDTH, Rocket.THRUSTER_HEIGHT)
 
     def update(self):
         velocity_x, velocity_y = self.velocity
@@ -170,7 +181,14 @@ class RocketLandingSimulator:
         self.rocket.update()
 
     def get_input(self):
-        pass
+        self.rocket.thrust_up = self.rocket.thrust_left = self.rocket.thrust_right = 0
+        if not self.rocket.boosting:
+            if pythonGraph.key_down("up"):
+                self.rocket.thrust_up = 0.35
+            if pythonGraph.key_down("right"):
+                self.rocket.thrust_left = 0.5
+            if pythonGraph.key_down("left"):
+                self.rocket.thrust_right = -0.5
 
     def is_simulation_over(self):
         return False
