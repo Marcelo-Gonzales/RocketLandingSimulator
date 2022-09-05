@@ -9,6 +9,9 @@ import pythonGraph
 # CONSTANTS
 SCREEN_WIDTH = 1250
 SCREEN_HEIGHT = 700
+TEXT_SIZE = 20
+TEXT_LOCATION_X = 0
+TEXT_LOCATION_Y = 0
 TITLE = "Rocket Simulator"
 
 
@@ -103,10 +106,19 @@ class Rocket:
         self.thrust_up = self.thrust_right = self.thrust_left = 0.0
         self.acceleration = 0.2 #Acceleration due to gravity
         self.terrain_location = None
+        self._fuel_consumed = 0
 
     @property
     def size(self):
         return self._size
+
+    @property
+    def fuel_consumed(self):
+        return self._fuel_consumed
+
+    @fuel_consumed.setter
+    def fuel_consumed(self, fuel_consumed):
+        self._fuel_consumed = fuel_consumed
 
     def initialize(self, generate_new_scenario, terrain=None):
         if generate_new_scenario:
@@ -157,8 +169,16 @@ class RocketLandingSimulator:
         self.terrain = Terrain()
         self.boat = Boat()
         self.rocket = Rocket()
+        self.max_score = 0
+        self.time_elapsed = 0
+        self.crashes = 0
+        self.landings = 0
 
     def initialize_simulation(self, generate_new_scenario):
+        self.time_elapsed = 0
+        self.rocket.fuel_consumed = 0
+        self.crashes = 0
+        self.landings = 0
         self.terrain.initialize(generate_new_scenario)
         self.boat.initialize(generate_new_scenario, terrain=self.terrain)
         self.rocket.initialize(generate_new_scenario, terrain=self.terrain)
@@ -170,6 +190,16 @@ class RocketLandingSimulator:
         self.terrain.draw()
         self.boat.draw()
         self.rocket.draw()
+        self.draw_hud()
+        self.time_elapsed += 1
+
+    def draw_hud(self):
+        pythonGraph.draw_text(f"Max Score: {self.max_score}", TEXT_LOCATION_X, TEXT_LOCATION_Y, pythonGraph.colors.WHITE, TEXT_SIZE)
+        pythonGraph.draw_text(f"Time Elapsed: {self.time_elapsed}", TEXT_LOCATION_X, TEXT_LOCATION_Y+TEXT_SIZE, pythonGraph.colors.WHITE, TEXT_SIZE)
+        pythonGraph.draw_text(f"Fuel Consumed: {self.rocket.fuel_consumed:.2f}", TEXT_LOCATION_X, TEXT_LOCATION_Y+2*TEXT_SIZE, pythonGraph.colors.WHITE, TEXT_SIZE)
+        pythonGraph.draw_text(f"X Velocity: {self.rocket.velocity[0]:.2f}", TEXT_LOCATION_X, TEXT_LOCATION_Y+3*TEXT_SIZE, pythonGraph.colors.WHITE, TEXT_SIZE)
+        pythonGraph.draw_text(f"Y Velocity: {self.rocket.velocity[1]:.2f}", TEXT_LOCATION_X, TEXT_LOCATION_Y+4*TEXT_SIZE, pythonGraph.colors.WHITE, TEXT_SIZE)
+        pythonGraph.draw_text(f"Crashes: {self.crashes} Landings: {self.landings}", TEXT_LOCATION_X, TEXT_LOCATION_Y+5*TEXT_SIZE, pythonGraph.colors.WHITE, TEXT_SIZE)
 
     def update_objects(self):
         self.boat.update()
@@ -180,10 +210,13 @@ class RocketLandingSimulator:
         if not self.rocket.boosting:
             if pythonGraph.key_down("up"):
                 self.rocket.thrust_up = 0.35
+                self.rocket.fuel_consumed += 0.35
             if pythonGraph.key_down("right"):
                 self.rocket.thrust_right = 0.5
+                self.rocket.fuel_consumed += 0.5
             if pythonGraph.key_down("left"):
                 self.rocket.thrust_left = -0.5
+                self.rocket.fuel_consumed += 0.5
 
     def is_simulation_over(self):
         if not self.rocket.boosting:
@@ -213,7 +246,6 @@ class RocketLandingSimulator:
             else:
                 self.analyze_results()
                 self.initialize_simulation(False)
-
             pythonGraph.update_window()
 
 
