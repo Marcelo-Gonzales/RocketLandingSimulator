@@ -3,13 +3,8 @@
     Created By: Marcelo F. Gonzales
 
 """
-import math 
 import random 
 import pythonGraph
-
-from abc import (
-    ABC as _ABC,
-    abstractclassmethod as _abstractclassmethod)
 
 # CONSTANTS
 SCREEN_WIDTH = 1250
@@ -78,7 +73,7 @@ class Boat:
         if generate_new_scenario:
             if terrain:
                 self.coordinates = (random.randint(terrain.ground_width, 
-                    terrain.ground_width + (SCREEN_WIDTH - terrain.ground_width + 1)), 
+                    (SCREEN_WIDTH - terrain.ground_width)), 
                     SCREEN_HEIGHT - terrain.water_height - self.size[1] + 1)
                 self.velocity = random.randint(Boat.MINIMUM_VELOCITY, Boat.MAXIMUM_VELOCITY)
                 self.terrain_location = terrain.ground_width
@@ -186,11 +181,22 @@ class RocketLandingSimulator:
             if pythonGraph.key_down("up"):
                 self.rocket.thrust_up = 0.35
             if pythonGraph.key_down("right"):
-                self.rocket.thrust_left = 0.5
+                self.rocket.thrust_right = 0.5
             if pythonGraph.key_down("left"):
-                self.rocket.thrust_right = -0.5
+                self.rocket.thrust_left = -0.5
 
     def is_simulation_over(self):
+        if not self.rocket.boosting:
+            left_side_of_rocket = self.rocket.coordinates[0] 
+            right_side_of_rocket = self.rocket.coordinates[0] + self.rocket.size[0]
+            if left_side_of_rocket < 0:
+                return True
+            if right_side_of_rocket > SCREEN_WIDTH:
+                return True
+            for i in range(round(left_side_of_rocket), round(right_side_of_rocket) + 1):
+                height = self.terrain.terrain_height[i]
+                if SCREEN_HEIGHT - height < self.rocket.coordinates[1] + self.rocket.size[1] - 10:
+                    return True
         return False
 
     def analyze_results(self):
