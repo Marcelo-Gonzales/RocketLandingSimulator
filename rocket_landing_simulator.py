@@ -233,7 +233,16 @@ class RocketLandingSimulator:
         return False
 
     def analyze_results(self):
-        pass
+        boat_left_side = self.boat.coordinates[0]
+        boat_right_side = self.boat.coordinates[0] + self.boat.size[0]
+        rocket_left_side = self.rocket.coordinates[0]
+        rocket_right_side = self.rocket.coordinates[0] + self.rocket.size[0]
+        if boat_left_side <= rocket_left_side and boat_right_side <= rocket_right_side:
+            self.max_score += 100
+            self.landings += 1
+        else:
+            self.max_score -= 100
+            self.crashes += 1
 
     def loop(self):
         self.initialize_simulation(True)
