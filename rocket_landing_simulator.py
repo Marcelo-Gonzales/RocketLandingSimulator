@@ -72,14 +72,15 @@ class Boat:
     def coordinates(self, coordinates):
         self._coordinates = coordinates
 
-    def initialize(self, generate_new_scenario, terrain=None):
-        if generate_new_scenario:
-            if terrain:
-                self.coordinates = (random.randint(terrain.ground_width, 
-                    (SCREEN_WIDTH - terrain.ground_width)), 
-                    SCREEN_HEIGHT - terrain.water_height - self.size[1] + 1)
+    def initialize(self, terrain=None):
+        if terrain:
+            self.coordinates = (random.randint(terrain.ground_width, 
+                (SCREEN_WIDTH - terrain.ground_width)), 
+                SCREEN_HEIGHT - terrain.water_height - self.size[1] + 1)
+            self.velocity = random.randint(Boat.MINIMUM_VELOCITY, Boat.MAXIMUM_VELOCITY)
+            while self.velocity == 0:
                 self.velocity = random.randint(Boat.MINIMUM_VELOCITY, Boat.MAXIMUM_VELOCITY)
-                self.terrain_location = terrain.ground_width
+            self.terrain_location = terrain.ground_width
         
 
     def draw(self):
@@ -104,7 +105,7 @@ class Rocket:
         self._size = (Rocket.WIDTH, Rocket.HEIGHT)
         self.boosting = True
         self.thrust_up = self.thrust_right = self.thrust_left = 0.0
-        self.acceleration = 0.2 #Acceleration due to gravity
+        self.acceleration = 0.15 #Acceleration due to gravity
         self.terrain_location = None
         self._fuel_consumed = 0
 
@@ -120,14 +121,13 @@ class Rocket:
     def fuel_consumed(self, fuel_consumed):
         self._fuel_consumed = fuel_consumed
 
-    def initialize(self, generate_new_scenario, terrain=None):
-        if generate_new_scenario:
-            self.boosting = True
-            if terrain:
-                self.coordinates = ((terrain.ground_width - self.size[0]) // 2, 
-                    SCREEN_HEIGHT - terrain.ground_height - self.size[1])
-                self.velocity = (0, 0)
-                self.terrain_location = terrain.ground_width
+    def initialize(self, terrain=None):
+        self.boosting = True
+        if terrain:
+            self.coordinates = ((terrain.ground_width - self.size[0]) // 2, 
+                SCREEN_HEIGHT - terrain.ground_height - self.size[1])
+            self.velocity = (0, 0)
+            self.terrain_location = terrain.ground_width
 
     def draw(self):
         pythonGraph.draw_image("rocket.png", self.coordinates[0], self.coordinates[1], self.size[0], self.size[1])
@@ -163,6 +163,7 @@ class Rocket:
 
 
 class RocketLandingSimulator:
+    NUM_RUNS = 5
     def __init__(self):
         pythonGraph.open_window(SCREEN_WIDTH, SCREEN_HEIGHT)
         pythonGraph.set_window_title(TITLE)
@@ -173,15 +174,14 @@ class RocketLandingSimulator:
         self.time_elapsed = 0
         self.crashes = 0
         self.landings = 0
+        self.current_run = 0
 
     def initialize_simulation(self, generate_new_scenario):
         self.time_elapsed = 0
         self.rocket.fuel_consumed = 0
-        self.crashes = 0
-        self.landings = 0
         self.terrain.initialize(generate_new_scenario)
-        self.boat.initialize(generate_new_scenario, terrain=self.terrain)
-        self.rocket.initialize(generate_new_scenario, terrain=self.terrain)
+        self.boat.initialize(terrain=self.terrain)
+        self.rocket.initialize(terrain=self.terrain)
 
     def erase_objects(self):
         pythonGraph.clear_window(pythonGraph.colors.BLACK)
@@ -237,7 +237,7 @@ class RocketLandingSimulator:
         boat_right_side = self.boat.coordinates[0] + self.boat.size[0]
         rocket_left_side = self.rocket.coordinates[0]
         rocket_right_side = self.rocket.coordinates[0] + self.rocket.size[0]
-        if boat_left_side <= rocket_left_side and boat_right_side <= rocket_right_side:
+        if boat_left_side <= rocket_left_side and boat_right_side >= rocket_right_side:
             self.max_score += 100
             self.landings += 1
         else:
@@ -254,7 +254,12 @@ class RocketLandingSimulator:
                 self.update_objects()
             else:
                 self.analyze_results()
-                self.initialize_simulation(False)
+                self.current_run += 1
+                if self.current_run == RocketLandingSimulator.NUM_RUNS:
+                    self.initialize_simulation(True)
+                    self.current_run = 0
+                else:
+                    self.initialize_simulation(False)
             pythonGraph.update_window()
 
 
